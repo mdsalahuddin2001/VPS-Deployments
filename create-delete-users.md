@@ -77,8 +77,6 @@ With **individual user accounts**:
 | Modify system files | ❌ No       | ✅ Yes (with `sudo`) |
 | Manage other users  | ❌ No       | ✅ Yes (with `sudo`) |
 
-|
-
 ### Normal User
 
 A regular user can only read/write their own files under `/home/username`. They cannot install packages, edit system config files, or affect other users.
