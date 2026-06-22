@@ -76,7 +76,8 @@ With **individual user accounts**:
 | Install software    | ❌ No       | ✅ Yes (with `sudo`) |
 | Modify system files | ❌ No       | ✅ Yes (with `sudo`) |
 | Manage other users  | ❌ No       | ✅ Yes (with `sudo`) |
-| Risk if compromised | 🟡 Low      | 🔴 Higher            |
+
+|
 
 ### Normal User
 
