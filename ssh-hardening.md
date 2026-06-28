@@ -79,6 +79,59 @@ ssh -p 2222 user@your_server_ip
 
 **Why:** Automated bots constantly scan port 22. Moving SSH to a non-standard port won't stop a determined attacker, but it dramatically cuts the noise — most of those automated scans and log entries simply disappear. It's security through obscurity, so treat it as a complement to keys and disabled root login, not a replacement.
 
+## 4. Install fail2ban
+
+The config changes above stop weak credentials from working. fail2ban goes a step further: it watches the logs and **bans IPs** that keep trying, so attackers can't keep hammering the server at all.
+
+Install it:
+
+```bash
+sudo apt update
+sudo apt install fail2ban -y
+```
+
+Create a local override (never edit `jail.conf` directly — package updates overwrite it):
+
+```bash
+sudo nano /etc/fail2ban/jail.local
+```
+
+Add an SSH jail. Set `port` to whatever you chose in step 3:
+
+```
+[sshd]
+enabled = true
+port = 2222
+maxretry = 5
+bantime = 1h
+findtime = 10m
+```
+
+> - `maxretry` — failed attempts before a ban.
+> - `findtime` — the window those attempts are counted in.
+> - `bantime` — how long the IP stays banned (use `-1` for permanent).
+
+Enable and start it:
+
+```bash
+sudo systemctl enable --now fail2ban
+```
+
+Check what it's doing:
+
+```bash
+sudo fail2ban-client status sshd
+```
+
+> **Don't lock yourself out:** whitelist your own IP so a few fat-fingered logins don't ban you. Add under a `[DEFAULT]` section in `jail.local`:
+>
+> ```
+> [DEFAULT]
+> ignoreip = 127.0.0.1/8 your.home.ip.address
+> ```
+
+**Why:** Even with keys-only login, bots will keep trying — filling your logs and wasting resources. fail2ban turns repeated failures into an automatic firewall ban, so a persistent attacker gets cut off instead of retrying indefinitely. It's the active defense that complements the passive hardening above.
+
 ## Verify
 
 From a new terminal, confirm you can still log in with all settings applied:
