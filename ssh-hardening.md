@@ -1,0 +1,90 @@
+# SSH Hardening
+
+A guide to locking down SSH on a remote server: disabling root login, disabling password authentication, and changing the default SSH port.
+
+> **Before you start:** Make sure you can already log in with an SSH key as a non-root sudo user. If you lock yourself out of these settings, you'll need console access (via your VPS provider) to recover. See [SSH Key Setup](./setup-ssh.md) and [Create / Delete Users](./create-delete-users.md).
+
+All changes live in `/etc/ssh/sshd_config`. Edit it with:
+
+```bash
+sudo nano /etc/ssh/sshd_config
+```
+
+After editing, **test the config before restarting**:
+
+```bash
+sudo sshd -t
+```
+
+Then apply the changes:
+
+```bash
+sudo systemctl restart ssh
+```
+
+> Keep your current SSH session open while you test the new settings in a **second** terminal. If something is wrong, you still have a working session to fix it.
+
+## 1. Disable Root Login
+
+Find and set:
+
+```
+PermitRootLogin no
+```
+
+**Why:** `root` is the one account that exists on every Linux server, so it's the first target for brute-force attacks. Disabling root login means an attacker has to guess both a valid username *and* its credentials. Day-to-day work should go through a regular sudo user, which also gives you an audit trail of who did what.
+
+## 2. Disable Password Authentication
+
+Set:
+
+```
+PasswordAuthentication no
+PubkeyAuthentication yes
+```
+
+> On some systems you should also set `ChallengeResponseAuthentication no` (or `KbdInteractiveAuthentication no` on newer OpenSSH) to fully turn off password prompts. Check for a `Include /etc/ssh/sshd_config.d/*.conf` line at the top of the file — a drop-in file there can override your changes.
+
+**Why:** Passwords can be guessed, brute-forced, or reused across services. SSH keys are effectively impossible to brute-force. Once key-based login works, passwords only add risk — turning them off stops all password brute-force attempts dead, no matter how weak the password is.
+
+## 3. Change the Default SSH Port
+
+Set (pick any unused port, e.g. 2222):
+
+```
+Port 2222
+```
+
+If you use a firewall, open the new port **before** restarting SSH:
+
+```bash
+sudo ufw allow 2222/tcp
+sudo ufw delete allow 22/tcp   # remove the old rule once the new port works
+```
+
+Connect using the new port:
+
+```bash
+ssh -p 2222 user@your_server_ip
+```
+
+> Add it to `~/.ssh/config` so you don't have to type `-p` every time:
+>
+> ```
+> Host myserver
+>     HostName your_server_ip
+>     User youruser
+>     Port 2222
+> ```
+
+**Why:** Automated bots constantly scan port 22. Moving SSH to a non-standard port won't stop a determined attacker, but it dramatically cuts the noise — most of those automated scans and log entries simply disappear. It's security through obscurity, so treat it as a complement to keys and disabled root login, not a replacement.
+
+## Verify
+
+From a new terminal, confirm you can still log in with all settings applied:
+
+```bash
+ssh -p 2222 user@your_server_ip
+```
+
+If that works, you're done. Close the backup session.
