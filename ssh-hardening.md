@@ -55,6 +55,8 @@ Set (pick any unused port, e.g. 2222):
 Port 2222
 ```
 
+> Pick a port in the **1024–49151** range (the registered-port range). Ports below 1024 are privileged/well-known and often reserved for other services, while the dynamic range **49152–65535** can be used by the OS for temporary outbound connections — avoiding both keeps the port stable and conflict-free.
+
 If you use a firewall, open the new port **before** restarting SSH:
 
 ```bash
@@ -108,8 +110,8 @@ findtime = 10m
 ```
 
 > - `maxretry` — failed attempts before a ban.
-> - `findtime` — the window those attempts are counted in.
-> - `bantime` — how long the IP stays banned (use `-1` for permanent).
+> - `findtime` — the window those attempts are counted in. Use a unit suffix: `s` seconds, `m` minutes, `h` hours, `d` days (e.g. `600` or `10m` = 10 minutes, `1h` = 1 hour).
+> - `bantime` — how long the IP stays banned (use `-1` for permanent). Same unit suffixes apply: `600`/`10m` = 10 minutes, `1h` = 1 hour, `1d` = 1 day.
 
 Enable and start it:
 
