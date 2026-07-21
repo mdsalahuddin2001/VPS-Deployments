@@ -32,7 +32,7 @@ Find and set:
 PermitRootLogin no
 ```
 
-**Why:** `root` is the one account that exists on every Linux server, so it's the first target for brute-force attacks. Disabling root login means an attacker has to guess both a valid username *and* its credentials. Day-to-day work should go through a regular sudo user, which also gives you an audit trail of who did what.
+**Why:** `root` is the one account that exists on every Linux server, so it's the first target for brute-force attacks. Disabling root login means an attacker has to guess both a valid username _and_ its credentials. Day-to-day work should go through a regular sudo user, which also gives you an audit trail of who did what.
 
 ## 2. Disable Password Authentication
 
@@ -49,13 +49,56 @@ PubkeyAuthentication yes
 
 ## 3. Change the Default SSH Port
 
-Set (pick any unused port, e.g. 2222):
+**File to edit:** `/etc/ssh/sshd_config`
+
+```bash
+sudo nano /etc/ssh/sshd_config
+```
+
+**Line to change:** find the `Port` line. It usually looks like this, commented out with a `#`:
+
+```
+#Port 22
+```
+
+**Change it to** an unused port (remove the `#` and pick your own, e.g. 2222):
 
 ```
 Port 2222
 ```
 
+If there's no `Port` line at all, just add one.
+
 > Pick a port in the **1024–49151** range (the registered-port range). Ports below 1024 are privileged/well-known and often reserved for other services, while the dynamic range **49152–65535** can be used by the OS for temporary outbound connections — avoiding both keeps the port stable and conflict-free.
+
+> **Ubuntu 22.10+ / 24.04 — the `Port` line above is ignored.** On these releases SSH is _socket-activated_: `systemd` opens the port via `ssh.socket`, and `sshd_config` never gets to. Setting `Port 2222`, restarting, and finding SSH still on 22 is this behaviour. Check with:
+>
+> ```bash
+> sudo systemctl status ssh.socket   # if it's active/enabled, the socket owns the port
+> ```
+>
+> If it's active, change the port on the socket instead. **File to edit:** a drop-in override, opened with:
+>
+> ```bash
+> sudo systemctl edit ssh.socket
+> ```
+>
+> **Lines to add** in the editor that opens (the empty `ListenStream=` clears the default of 22):
+>
+> ```
+> [Socket]
+> ListenStream=
+> ListenStream=2222
+> ```
+>
+> Then reload and restart the socket (a plain `systemctl restart ssh` will **not** rebind the port here):
+>
+> ```bash
+> sudo systemctl daemon-reload
+> sudo systemctl restart ssh.socket
+> ```
+
+> A drop-in file under `/etc/ssh/sshd_config.d/*.conf` can also set its own `Port` and override yours — the same caveat noted in step 2. Grep for it: `grep -r -i '^port' /etc/ssh/sshd_config /etc/ssh/sshd_config.d/`.
 
 If you use a firewall, open the new port **before** restarting SSH:
 
