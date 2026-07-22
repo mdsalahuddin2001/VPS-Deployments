@@ -147,6 +147,7 @@ port = 2222
 maxretry = 5
 bantime = 1h
 findtime = 10m
+mode = aggressive
 ```
 
 > - `maxretry` — failed attempts before a ban.
