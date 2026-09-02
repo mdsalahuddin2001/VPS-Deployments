@@ -52,6 +52,51 @@ sudo ufw allow 22
 
 It will add the rule for both TCP and UDP.But since ssh only use TCP protocol, it is better to specify /tcp.This way we can deny UDP or other traffic to port 22.
 
+### UFW application profiles
+
+Some packages ship a UFW application profile — a named bundle of ports and protocols stored in `/etc/ufw/applications.d`. Instead of remembering port numbers, you can allow a rule by its profile name.
+
+List the profiles available on your server:
+
+```bash
+sudo ufw app list
+```
+
+```
+Available applications:
+  Nginx Full
+  Nginx HTTP
+  Nginx HTTPS
+  OpenSSH
+```
+
+A profile only appears after its package is installed, so this list differs from server to server.
+
+Before using a profile, inspect it so you know exactly which ports it opens:
+
+```bash
+sudo ufw app info OpenSSH
+```
+
+```
+Profile: OpenSSH
+Title: Secure shell server, an rshd replacement
+Description: OpenSSH is a free implementation of the Secure Shell protocol.
+
+Port:
+  22/tcp
+```
+
+So this:
+
+```bash
+sudo ufw allow OpenSSH
+```
+
+is the same as `sudo ufw allow 22/tcp`.
+
+> **Caveat:** profiles hardcode the default port. If you moved SSH to a custom port, `OpenSSH` still opens 22 — allow your actual port number instead. See [SSH Hardening](./ssh-hardening.md).
+
 ## Set Default Policies
 
 Deny everything coming in, allow everything going out. This is the safe baseline — you then open only the ports you need.
