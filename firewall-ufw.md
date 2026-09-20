@@ -8,6 +8,38 @@ A firewall is a security device or software that monitors and controls incoming 
 
 UFW stands for Uncomplicated Firewall, a user-friendly command-line tool used to manage firewall rules on Linux systems.
 
+Linux already has a packet filter built into the kernel (`netfilter`, configured through `iptables`/`nftables`), but writing those rules by hand is verbose and easy to get wrong. UFW is a front-end over it: you write one short command, and UFW generates the underlying rules for you.
+
+A UFW rule answers three questions: **what action** (allow / deny), **which port and protocol**, and **from which source**.
+
+Some example rules:
+
+```bash
+# allow SSH (port 22, TCP) from anywhere
+sudo ufw allow 22/tcp
+
+# allow web traffic
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+
+# allow by application profile instead of port number
+sudo ufw allow 'Nginx Full'
+
+# allow a port only from one IP (e.g. MongoDB from your app server)
+sudo ufw allow from 203.0.113.10 to any port 27017 proto tcp
+
+# allow a UDP port (e.g. OpenVPN)
+sudo ufw allow 1194/udp
+
+# allow a range of ports
+sudo ufw allow 6000:6100/tcp
+
+# block a port explicitly
+sudo ufw deny 8080/tcp
+```
+
+Each of these is explained in more detail later in this document.
+
 > **Before you enable the firewall:** allow your SSH port _first_. If you enable UFW with SSH blocked, you'll lock yourself out and need console access (via your VPS provider) to recover. See [SSH Hardening](./ssh-hardening.md).
 
 ### Install
